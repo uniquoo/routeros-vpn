@@ -47,48 +47,6 @@
     :return $valueArg;
   }
 
-  :global Min do={
-    :global printMethodCall;
-    :global printDebug;
-    :global printVar;
-    :global required;
-
-    :local firstArg [:tonum [$required $1 name="first argument"]];
-    :local secondArg [:tonum [$required $2 name="second argument"]];
-
-    $printMethodCall $0;
-    $printVar name="first" value=$firstArg;
-    $printVar name="second" value=$secondArg;
-
-    if ($firstArg < $secondArg) do={
-      $printDebug ("The minimum value is the first, with value: " . $firstArg);
-      :return $firstArg;
-    }
-    $printDebug ("The minimum value is the second, with value: " . $secondArg);
-    :return $secondArg;
-  }
-
-  :global Max do={
-    :global printMethodCall;
-    :global printDebug;
-    :global printVar;
-    :global required;
-
-    :local firstArg [:tonum [$required $1 name="first argument"]];
-    :local secondArg [:tonum [$required $2 name="second argument"]];
-
-    $printMethodCall $0;
-    $printVar name="first" value=$firstArg;
-    $printVar name="second" value=$secondArg;
-
-    if ($firstArg < $secondArg) do={
-      $printDebug ("The maximum value is the second, with value: " . $secondArg);
-      :return $secondArg;
-    }
-    $printDebug ("The maximum value is the first, with value: " . $firstArg);
-    :return $firstArg;
-  }
-
   :global ParseBool do={
     :global printMethodCall;
     :global printDebug;
@@ -117,23 +75,34 @@
     :global required;
     :global printMethodCall;
     :global printVar;
-    :global Min;
-    :global Max;
 
     :local fileArg [:tostr [$required $file name="file" description="Path to a file."]];
-    :local ageArg [:totime [$required $age name="age" description="The age to check against the creation time of the file."]];
+    :local ageArg [:totime [$required $age name="age" description="The age to check against the last-modified time of the file."]];
 
     $printMethodCall $0;
+
+    $printVar name="fileArg" value=$fileArg;
+    $printVar name="ageArg" value=$ageArg;
 
     :local currentDate [:totime [/system/clock/get date]];
     :local currentTime [:totime [/system/clock/get time]];
     :local currentDateTime ($currentDate + $currentTime);
   
-    :local fileDateTime [:totime [/file/get $fileArg value-name=last-modified]];
+    :local fileDateTime;
+    :do {
+        :set fileDateTime [:totime [/file/get $fileArg value-name=last-modified]];
+        $printVar name="fileDateTime" value=$fileDateTime;
+    } on-error={
+        :put "ERROR: Unable to retrieve last-modified time for file '$fileArg'.";
+        :return false;
+    }
 
     :local fileAge ($currentDateTime - $fileDateTime);
+    $printVar name="fileAge" value=$fileAge;
 
-    :return ($ageArg < $fileAge);
+    :local isOlderThan ($ageArg < $fileAge);
+    $printVar name="isOlderThan" value=$isOlderThan;
+    :return $isOlderThan;
   }
 
   :global FileExists do={
