@@ -94,7 +94,7 @@
         $printVar name="fileDateTime" value=$fileDateTime;
     } on-error={
         :put "ERROR: Unable to retrieve last-modified time for file '$fileArg'.";
-        :return false;
+        :return true;
     }
 
     :local fileAge ($currentDateTime - $fileDateTime);
